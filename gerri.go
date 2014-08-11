@@ -4,8 +4,7 @@ package main
 Minimal IRC bot in Go
 
 TODO:
-* reply PING :cookie (e.g. PING :sinisalo.freenode.net) with PING: cookie
-* add plugins (!wik, !random, !ping, !title)
+* add plugins (!wik, !random, !title)
 * store connection info in json file
 */
 
@@ -15,14 +14,44 @@ import (
 	"net"
         "bufio"
         "net/textproto"
+	"strings"
 )
 
 const (
 	USER = "USER"
 	NICK = "NICK"
 	JOIN = "JOIN"
+	PING = "PING"
+	PONG = "PONG"
+	PRIVMSG = "PRIVMSG"
 	SUFFIX = "\r\n"
 )
+
+type privmsg struct {
+	src string
+	tgt string
+	msg []string
+}
+
+func msgUser(nick string) string {
+	return USER + " " + nick + " 8 * :" + nick + SUFFIX
+}
+
+func msgNick(nick string) string {
+	return NICK + " " + nick + SUFFIX
+}
+
+func msgJoin(channel string) string {
+	return JOIN + " " + channel + SUFFIX
+}
+
+func msgPong(host string) string {
+	return PONG + " :" + host + SUFFIX
+}
+
+func msgPrivmsg(receiver string, msg string) string {
+	return PRIVMSG + " " + receiver + " :" + msg + SUFFIX
+}
 
 func connect(server string, port string) (net.Conn, error) {
 	/* establishes irc connection  */
@@ -35,8 +64,16 @@ func connect(server string, port string) (net.Conn, error) {
 	return conn, err
 }
 
-func read(ch chan<- string, conn net.Conn) {
-	/* defines goroutine sending lines to channel */
+func handlePrivmsg(pm privmsg) string {
+	msg := strings.Join(pm.msg, " ")
+	if strings.HasPrefix(msg, ":!ping") {
+		return msgPrivmsg(pm.tgt, "meow")
+	}
+	return ""
+}
+
+func send(ch chan<- string, conn net.Conn) {
+	/* defines goroutine sending messages to channel */
 	reader := textproto.NewReader(bufio.NewReader(conn))
 	for {
 		line, err := reader.ReadLine()
@@ -48,15 +85,33 @@ func read(ch chan<- string, conn net.Conn) {
 	}
 }
 
-func write(ch <-chan string, conn net.Conn) {
-	/* defines goroutine receiving lines from channel */
+func receive(ch <-chan string, conn net.Conn) {
+	/* defines goroutine receiving messages from channel */
 	for {
 		line, ok := <-ch
 		if !ok {
 			log.Fatal("aborted: failed to receive from channel")
 			break
 		}
-		fmt.Println(line)
+		log.Printf(line)
+
+		if strings.HasPrefix(line, PING) {
+			// reply PING with PONG
+			msg := msgPong(strings.Split(line, ":")[1])
+			conn.Write([]byte(msg))
+			log.Printf(msg)
+		} else {
+			// reply PRIVMSG
+			tokens := strings.Split(line, " ")
+			if len(tokens) >= 4 && tokens[1] == PRIVMSG {
+				pm := privmsg{src: tokens[0], tgt: tokens[2], msg: tokens[3:]}
+				reply := handlePrivmsg(pm)
+				log.Printf("reply: %s", reply)
+				if reply != "" {
+					conn.Write([]byte(reply))
+				}
+			}
+		}
 	}
 }
 
@@ -71,16 +126,16 @@ func main() {
 	}
 
 	// send messages: USER/NICK/JOIN
-	conn.Write([]byte(USER + " " + nick + " 8 * :" + nick + SUFFIX))
-	conn.Write([]byte(NICK + " " + nick + SUFFIX))
-	conn.Write([]byte(JOIN + " " + channel + SUFFIX))
+	conn.Write([]byte(msgUser(nick)))
+	conn.Write([]byte(msgNick(nick)))
+	conn.Write([]byte(msgJoin(channel)))
 
 	defer conn.Close()
 
         // define goroutines communicating via channel
 	ch := make(chan string)
-	go read(ch, conn)
-	go write(ch, conn)
+	go send(ch, conn)
+	go receive(ch, conn)
 
 	var input string
 	fmt.Scanln(&input)
