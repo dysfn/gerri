@@ -94,8 +94,13 @@ func replyPing(msg string) string {
 func replyWik(msg string) string {
 	ddg := queryDuckDuckGo(msg)
 	if ddg.AbstractText != "" && ddg.AbstractURL != "" {
-		truncated := strings.Split(ddg.AbstractText, " ")[:50]  // first 50 words
-		return fmt.Sprintf("%s... (source: %s)", strings.Join(truncated, " "), ddg.AbstractURL)
+		size := 40
+        words := strings.Split(ddg.AbstractText, " ")
+		if len(words) > size {
+			return fmt.Sprintf("%s... (source: %s)", strings.Join(words[:size], " "), ddg.AbstractURL)
+		} else {
+			return fmt.Sprintf("%s (source: %s)", ddg.AbstractText, ddg.AbstractURL)
+		}
 	} else {
 		return "(no results found)"
 	}
