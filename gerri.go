@@ -4,17 +4,21 @@ package main
 Minimal IRC bot in Go
 
 TODO:
-* add plugins (!wik, !random, !title)
+* add more plugins
 * store connection info in json file
 */
 
 import (
-        "fmt"
-        "log"
+	"fmt"
+	"log"
+	"bufio"
 	"net"
-        "bufio"
-        "net/textproto"
+	"net/textproto"
 	"strings"
+	"net/url"
+	"encoding/json"
+	"net/http"
+	"io/ioutil"
 )
 
 const (
@@ -27,12 +31,19 @@ const (
 	SUFFIX = "\r\n"
 )
 
-type privmsg struct {
-	src string
-	tgt string
-	msg []string
+/* structs */
+type Privmsg struct {
+	Source string
+	Target string
+	Message []string
 }
 
+type DuckDuckGo struct {
+	AbstractText string
+	AbstractURL string
+}
+
+/* simple message builders */
 func msgUser(nick string) string {
 	return USER + " " + nick + " 8 * :" + nick + SUFFIX
 }
@@ -53,6 +64,59 @@ func msgPrivmsg(receiver string, msg string) string {
 	return PRIVMSG + " " + receiver + " :" + msg + SUFFIX
 }
 
+/* plugin helpers */
+func queryDuckDuckGo(term string) *DuckDuckGo {
+	var ddg *DuckDuckGo = &DuckDuckGo{}
+
+    encoded := url.QueryEscape(term)
+	resource := fmt.Sprintf("http://api.duckduckgo.com?format=json&q=%s", encoded)
+
+	resp, err := http.Get(resource)
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = json.Unmarshal(body, ddg); err != nil {
+		log.Fatal(err)
+	}
+
+	return ddg
+}
+
+/* plugins */
+func replyPing(msg string) string {
+	return "meow"
+}
+
+func replyWik(msg string) string {
+	ddg := queryDuckDuckGo(msg)
+	if ddg.AbstractText != "" && ddg.AbstractURL != "" {
+		sentence := strings.Split(ddg.AbstractText, ". ")[0]  // first sentence
+		return fmt.Sprintf("%s%s (source: %s)", sentence, ".", ddg.AbstractURL)
+	} else {
+		return "(no results found)"
+	}
+}
+
+var repliers = map[string]func(string) string{
+	":!ping": replyPing,
+	":!wik": replyWik,
+}
+
+func buildPrivmsg(pm Privmsg) string {
+	/* replies PRIVMSG message */
+	msg := strings.Join(pm.Message[1:], " ")
+	fn, found := repliers[pm.Message[0]]
+	if found {
+		return msgPrivmsg(pm.Target, fn(msg))
+	} else {
+		return ""
+	}
+}
+
 func connect(server string, port string) (net.Conn, error) {
 	/* establishes irc connection  */
 	log.Printf("connecting to %s:%s...", server, port)
@@ -62,14 +126,6 @@ func connect(server string, port string) (net.Conn, error) {
 	}
 	log.Printf("connected")
 	return conn, err
-}
-
-func handlePrivmsg(pm privmsg) string {
-	msg := strings.Join(pm.msg, " ")
-	if strings.HasPrefix(msg, ":!ping") {
-		return msgPrivmsg(pm.tgt, "meow")
-	}
-	return ""
 }
 
 func send(ch chan<- string, conn net.Conn) {
@@ -104,10 +160,10 @@ func receive(ch <-chan string, conn net.Conn) {
 			// reply PRIVMSG
 			tokens := strings.Split(line, " ")
 			if len(tokens) >= 4 && tokens[1] == PRIVMSG {
-				pm := privmsg{src: tokens[0], tgt: tokens[2], msg: tokens[3:]}
-				reply := handlePrivmsg(pm)
-				log.Printf("reply: %s", reply)
+				pm := Privmsg{Source: tokens[0], Target: tokens[2], Message: tokens[3:]}
+				reply := buildPrivmsg(pm)
 				if reply != "" {
+					log.Printf("reply: %s", reply)
 					conn.Write([]byte(reply))
 				}
 			}
@@ -116,10 +172,10 @@ func receive(ch <-chan string, conn net.Conn) {
 }
 
 func main() {
-        server, port := "chat.freenode.net", "8002"
+	server, port := "chat.freenode.net", "8002"
 	nick, channel := "gerri", "#microamp"
 
-        // connect to irc
+	// connect to irc
 	conn, err := connect(server, port)
 	if err != nil {
 		log.Fatal(err)
@@ -132,7 +188,7 @@ func main() {
 
 	defer conn.Close()
 
-        // define goroutines communicating via channel
+	// define goroutines communicating via channel
 	ch := make(chan string)
 	go send(ch, conn)
 	go receive(ch, conn)
