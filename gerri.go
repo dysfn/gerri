@@ -68,7 +68,7 @@ func msgPrivmsg(receiver string, msg string) string {
 func queryDuckDuckGo(term string) *DuckDuckGo {
 	var ddg *DuckDuckGo = &DuckDuckGo{}
 
-    encoded := url.QueryEscape(term)
+	encoded := url.QueryEscape(term)
 	resource := fmt.Sprintf("http://api.duckduckgo.com?format=json&q=%s", encoded)
 
 	resp, err := http.Get(resource)
@@ -94,8 +94,8 @@ func replyPing(msg string) string {
 func replyWik(msg string) string {
 	ddg := queryDuckDuckGo(msg)
 	if ddg.AbstractText != "" && ddg.AbstractURL != "" {
-		sentence := strings.Split(ddg.AbstractText, ". ")[0]  // first sentence
-		return fmt.Sprintf("%s%s (source: %s)", sentence, ".", ddg.AbstractURL)
+		truncated := strings.Split(ddg.AbstractText, " ")[:50]  // first 50 words
+		return fmt.Sprintf("%s... (source: %s)", strings.Join(truncated, " "), ddg.AbstractURL)
 	} else {
 		return "(no results found)"
 	}
