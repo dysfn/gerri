@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"io/ioutil"
+	"time"
 )
 
 const (
@@ -75,6 +76,7 @@ func queryDuckDuckGo(term string) *DuckDuckGo {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -91,35 +93,38 @@ func replyPing(msg string) string {
 	return "meow"
 }
 
+func replyDay(msg string) string {
+	return time.Now().Weekday().String()
+}
+
 func replyWik(msg string) string {
 	ddg := queryDuckDuckGo(msg)
 	if ddg.AbstractText != "" && ddg.AbstractURL != "" {
-		size := 40
-        words := strings.Split(ddg.AbstractText, " ")
+		size := 35
+		words := strings.Split(ddg.AbstractText, " ")
 		if len(words) > size {
 			return fmt.Sprintf("%s... (source: %s)", strings.Join(words[:size], " "), ddg.AbstractURL)
 		} else {
 			return fmt.Sprintf("%s (source: %s)", ddg.AbstractText, ddg.AbstractURL)
 		}
-	} else {
-		return "(no results found)"
 	}
+	return "(zzzzz...)"
 }
 
 var repliers = map[string]func(string) string{
 	":!ping": replyPing,
+	":!day": replyDay,
 	":!wik": replyWik,
 }
 
-func buildPrivmsg(pm Privmsg) string {
+func buildReply(pm Privmsg) string {
 	/* replies PRIVMSG message */
 	msg := strings.Join(pm.Message[1:], " ")
 	fn, found := repliers[pm.Message[0]]
 	if found {
 		return msgPrivmsg(pm.Target, fn(msg))
-	} else {
-		return ""
 	}
+	return ""
 }
 
 func connect(server string, port string) (net.Conn, error) {
@@ -166,7 +171,7 @@ func receive(ch <-chan string, conn net.Conn) {
 			tokens := strings.Split(line, " ")
 			if len(tokens) >= 4 && tokens[1] == PRIVMSG {
 				pm := Privmsg{Source: tokens[0], Target: tokens[2], Message: tokens[3:]}
-				reply := buildPrivmsg(pm)
+				reply := buildReply(pm)
 				if reply != "" {
 					log.Printf("reply: %s", reply)
 					conn.Write([]byte(reply))
