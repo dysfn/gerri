@@ -30,6 +30,9 @@ const (
 	PONG = "PONG"
 	PRIVMSG = "PRIVMSG"
 	SUFFIX = "\r\n"
+	BEERTIME_WD = "Friday"
+	BEERTIME_HR = 16
+	BEERTIME_MIN = 30
 )
 
 /* structs */
@@ -88,6 +91,24 @@ func queryDuckDuckGo(term string) *DuckDuckGo {
 	return ddg
 }
 
+func diff(weekday string, hour int, minute int) string {
+	now := time.Now()
+	wd := now.Weekday().String()
+	if wd == weekday {
+		y, m, d := now.Date()
+		location := now.Location()
+
+		beertime := time.Date(y, m, d, hour, minute, 0, 0, location)
+		diff := beertime.Sub(now)
+
+		if diff.Seconds() > 0 {
+			return fmt.Sprintf("%d minutes to go...", int(diff.Minutes()))
+		}
+		return "It's beertime!"
+	}
+	return fmt.Sprintf("It's only %s...", wd)
+}
+
 /* plugins */
 func replyPing(msg string) string {
 	return "meow"
@@ -111,10 +132,15 @@ func replyWik(msg string) string {
 	return "(zzzzz...)"
 }
 
+func replyBeertime(msg string) string {
+	return diff(BEERTIME_WD, BEERTIME_HR, BEERTIME_MIN)
+}
+
 var repliers = map[string]func(string) string{
 	":!ping": replyPing,
 	":!day": replyDay,
 	":!wik": replyWik,
+	":!beertime": replyBeertime,
 }
 
 func buildReply(pm Privmsg) string {
