@@ -47,6 +47,14 @@ type DuckDuckGo struct {
 	AbstractURL string
 }
 
+type GIF struct {
+	ID string
+}
+
+type Giphy struct {
+	Data []GIF
+}
+
 /* simple message builders */
 func msgUser(nick string) string {
 	return USER + " " + nick + " 8 * :" + nick + SUFFIX
@@ -69,6 +77,27 @@ func msgPrivmsg(receiver string, msg string) string {
 }
 
 /* plugin helpers */
+func searchGiphy(term string) *Giphy{
+	var giphy *Giphy = &Giphy{}
+
+	encoded := url.QueryEscape(term)
+	resource := fmt.Sprintf("http://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=%s", encoded)
+
+	resp, err := http.Get(resource)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = json.Unmarshal(body, giphy); err != nil {
+		log.Fatal(err)
+	}
+	return giphy
+}
+
 func queryDuckDuckGo(term string) *DuckDuckGo {
 	var ddg *DuckDuckGo = &DuckDuckGo{}
 
@@ -118,6 +147,14 @@ func replyDay(msg string) string {
 	return time.Now().Weekday().String()
 }
 
+func replyGIF(msg string) string {
+	giphy := searchGiphy(msg)
+	if giphy.Data[0].ID != "" {
+		return fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[0].ID)
+	}
+	return "(zzzzz...)"
+}
+
 func replyWik(msg string) string {
 	ddg := queryDuckDuckGo(msg)
 	if ddg.AbstractText != "" && ddg.AbstractURL != "" {
@@ -139,6 +176,7 @@ func replyBeertime(msg string) string {
 var repliers = map[string]func(string) string{
 	":!ping": replyPing,
 	":!day": replyDay,
+	":!gif": replyGIF,
 	":!wik": replyWik,
 	":!beertime": replyBeertime,
 }
