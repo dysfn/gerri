@@ -4,25 +4,30 @@ package main
 Minimal IRC bot in Go
 
 TODO:
-* add more plugins
+* google app engine integration to evaluate python code
+* add more plugins (!title, !hn, !reddit, ...)
 * store connection info in json file
+* separate out plugins from main program
 */
 
 import (
-	"fmt"
-	"log"
 	"bufio"
-	"net"
-	"net/textproto"
-	"strings"
-	"net/url"
 	"encoding/json"
-	"net/http"
+	"fmt"
 	"io/ioutil"
+	"log"
+	"math"
+	"math/rand"
+	"net"
+	"net/http"
+	"net/textproto"
+	"net/url"
+	"strings"
 	"time"
 )
 
 const (
+	VERSION = "0.1.1"
 	USER = "USER"
 	NICK = "NICK"
 	JOIN = "JOIN"
@@ -33,6 +38,7 @@ const (
 	BEERTIME_WD = "Friday"
 	BEERTIME_HR = 16
 	BEERTIME_MIN = 30
+	JIRA = "https://webdrive.atlassian.net"
 )
 
 /* structs */
@@ -120,7 +126,7 @@ func queryDuckDuckGo(term string) *DuckDuckGo {
 	return ddg
 }
 
-func diff(weekday string, hour int, minute int) string {
+func timeDelta(weekday string, hour int, minute int) string {
 	now := time.Now()
 	wd := now.Weekday().String()
 	if wd == weekday {
@@ -131,62 +137,94 @@ func diff(weekday string, hour int, minute int) string {
 		diff := beertime.Sub(now)
 
 		if diff.Seconds() > 0 {
-			return fmt.Sprintf("%d minutes to go...", int(diff.Minutes()))
+			return fmt.Sprintf("less than %d minute(s) to go...", int(math.Ceil(diff.Minutes())))
 		}
-		return "It's beertime!"
+		return "it's beertime!"
 	}
-	return fmt.Sprintf("It's only %s...", wd)
+	return fmt.Sprintf("it's only %s...", strings.ToLower(wd))
 }
 
 /* plugins */
-func replyPing(msg string) string {
-	return "meow"
+func replyVer(pm Privmsg) string {
+	return msgPrivmsg(pm.Target, fmt.Sprintf("gerri version: %s", VERSION))
 }
 
-func replyDay(msg string) string {
-	return time.Now().Weekday().String()
+func replyPing(pm Privmsg) string {
+	return msgPrivmsg(pm.Target, "meow")
 }
 
-func replyGIF(msg string) string {
+func replyGIF(pm Privmsg) string {
+	msg := strings.Join(pm.Message[1:], " ")
 	giphy := searchGiphy(msg)
 	if giphy.Data[0].ID != "" {
-		return fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[0].ID)
+        m := fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[0].ID)
+        return msgPrivmsg(pm.Target, m)
 	}
-	return "(zzzzz...)"
+    return msgPrivmsg(pm.Target, "(zzzzz...)")
 }
 
-func replyWik(msg string) string {
-	ddg := queryDuckDuckGo(msg)
-	if ddg.AbstractText != "" && ddg.AbstractURL != "" {
-		size := 35
-		words := strings.Split(ddg.AbstractText, " ")
-		if len(words) > size {
-			return fmt.Sprintf("%s... (source: %s)", strings.Join(words[:size], " "), ddg.AbstractURL)
-		} else {
-			return fmt.Sprintf("%s (source: %s)", ddg.AbstractText, ddg.AbstractURL)
+func replyDay(pm Privmsg) string {
+	return msgPrivmsg(pm.Target, strings.ToLower(time.Now().Weekday().String()))
+}
+
+func replyWik(pm Privmsg) string {
+	msg := strings.Join(pm.Message[1:], " ")
+	if strings.TrimSpace(msg) != "" {
+		ddg := queryDuckDuckGo(msg)
+		if ddg.AbstractText != "" && ddg.AbstractURL != "" {
+			size := 30
+			words := strings.Split(ddg.AbstractText, " ")
+			var m string
+			if len(words) > size {
+				m = fmt.Sprintf("%s... (source: %s)", strings.Join(words[:size], " "), ddg.AbstractURL)
+			} else {
+				m = fmt.Sprintf("%s (source: %s)", ddg.AbstractText, ddg.AbstractURL)
+			}
+			return msgPrivmsg(pm.Target, m)
 		}
+		return msgPrivmsg(pm.Target, "(zzzzz...)")
 	}
-	return "(zzzzz...)"
+	return ""
 }
 
-func replyBeertime(msg string) string {
-	return diff(BEERTIME_WD, BEERTIME_HR, BEERTIME_MIN)
+func replyBeertime(pm Privmsg) string {
+	return msgPrivmsg(pm.Target, timeDelta(BEERTIME_WD, BEERTIME_HR, BEERTIME_MIN))
 }
 
-var repliers = map[string]func(string) string{
+func replyJira(pm Privmsg) string {
+	msg := strings.Join(pm.Message[1:], " ")
+	if strings.TrimSpace(msg) != "" {
+		return msgPrivmsg(pm.Target, JIRA + "/browse/" + strings.ToUpper(msg))
+	}
+	return msgPrivmsg(pm.Target, JIRA)
+}
+
+func replyAsk(pm Privmsg) string {
+	msg := strings.Join(pm.Message[1:], " ")
+	if strings.TrimSpace(msg) != "" {
+		rand.Seed(time.Now().UnixNano())
+		return msgPrivmsg(pm.Target, [2]string{"yes!", "no..."}[rand.Intn(2)])
+	}
+	return ""
+}
+
+var repliers = map[string]func(Privmsg) string {
+	":!ver": replyVer,
+	":!version": replyVer,
 	":!ping": replyPing,
 	":!day": replyDay,
 	":!gif": replyGIF,
 	":!wik": replyWik,
 	":!beertime": replyBeertime,
+	":!jira": replyJira,
+	":!ask": replyAsk,
 }
 
 func buildReply(pm Privmsg) string {
 	/* replies PRIVMSG message */
-	msg := strings.Join(pm.Message[1:], " ")
 	fn, found := repliers[pm.Message[0]]
 	if found {
-		return msgPrivmsg(pm.Target, fn(msg))
+		return fn(pm)
 	}
 	return ""
 }
