@@ -159,8 +159,8 @@ func replyPing(pm Privmsg) string {
 func replyGIF(pm Privmsg) string {
 	msg := strings.Join(pm.Message[1:], " ")
 	giphy := searchGiphy(msg)
-	if giphy.Data[0].ID != "" {
-		m := fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[0].ID)
+	if len(giphy.Data) > 0 {
+		m := fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[rand.Intn(len(giphy.Data))].ID)
 		return msgPrivmsg(pm.Target, m)
 	}
 	return msgPrivmsg(pm.Target, "(zzzzz...)")
