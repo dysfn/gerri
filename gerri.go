@@ -86,6 +86,9 @@ func msgPrivmsg(receiver string, msg string) string {
 func searchGiphy(term string) *Giphy{
 	var giphy *Giphy = &Giphy{}
 
+	if term == "" {
+		term = "cat"
+	}
 	encoded := url.QueryEscape(term)
 	resource := fmt.Sprintf("http://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=%s", encoded)
 
@@ -157,10 +160,10 @@ func replyGIF(pm Privmsg) string {
 	msg := strings.Join(pm.Message[1:], " ")
 	giphy := searchGiphy(msg)
 	if giphy.Data[0].ID != "" {
-        m := fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[0].ID)
-        return msgPrivmsg(pm.Target, m)
+		m := fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[0].ID)
+		return msgPrivmsg(pm.Target, m)
 	}
-    return msgPrivmsg(pm.Target, "(zzzzz...)")
+	return msgPrivmsg(pm.Target, "(zzzzz...)")
 }
 
 func replyDay(pm Privmsg) string {
