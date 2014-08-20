@@ -34,6 +34,7 @@ const (
 	PING = "PING"
 	PONG = "PONG"
 	PRIVMSG = "PRIVMSG"
+	ACTION = "\x01ACTION"
 	SUFFIX = "\r\n"
 	BEERTIME_WD = "Friday"
 	BEERTIME_HR = 16
@@ -147,6 +148,18 @@ func timeDelta(weekday string, hour int, minute int) string {
 	return fmt.Sprintf("it's only %s...", strings.ToLower(wd))
 }
 
+func slapAction(target string) string {
+	actions := []string {
+		"slaps", "kicks", "destroys", "annihilates", "punches",
+		"roundhouse kicks", "rusty hooks", "pwns", "owns"}
+	if strings.TrimSpace(target) != "" {
+		selected_action := actions[rand.Intn(len(actions))]
+		return fmt.Sprintf(ACTION + " " + selected_action + " " + target)
+	} else {
+		return fmt.Sprintf(ACTION + " zzzzz...")
+	}
+}
+
 /* plugins */
 func replyVer(pm Privmsg) string {
 	return msgPrivmsg(pm.Target, fmt.Sprintf("gerri version: %s", VERSION))
@@ -211,6 +224,12 @@ func replyAsk(pm Privmsg) string {
 	return ""
 }
 
+func replySlap(pm Privmsg) string {
+	slap := slapAction(strings.Join(pm.Message[1:], " "))
+	return msgPrivmsg(pm.Target, slap)
+}
+
+
 var repliers = map[string]func(Privmsg) string {
 	":!ver": replyVer,
 	":!version": replyVer,
@@ -221,6 +240,7 @@ var repliers = map[string]func(Privmsg) string {
 	":!beertime": replyBeertime,
 	":!jira": replyJira,
 	":!ask": replyAsk,
+	":!slap": replySlap,
 }
 
 func buildReply(pm Privmsg) string {
