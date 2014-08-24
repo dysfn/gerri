@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	VERSION = "0.1.1"
+	VERSION = "0.2.1"
 	USER = "USER"
 	NICK = "NICK"
 	JOIN = "JOIN"
