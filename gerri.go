@@ -2,12 +2,6 @@ package main
 
 /*
 Minimal IRC bot in Go
-
-TODO:
-* google app engine integration to evaluate python code
-* add more plugins (!title, !hn, !reddit, ...)
-* store connection info in json file
-* separate out plugins from main program
 */
 
 import (
@@ -39,7 +33,12 @@ const (
 	BEERTIME_WD = "Friday"
 	BEERTIME_HR = 16
 	BEERTIME_MIN = 30
+	WIK_WORDS = 25
 	JIRA = "https://webdrive.atlassian.net"
+	GIPHY = "http://media.giphy.com"
+	GIPHY_API = "http://api.giphy.com"
+	GIPHY_KEY = "dc6zaTOxFJmzC"
+	DDG_API = "http://api.duckduckgo.com"
 )
 
 /* structs */
@@ -84,53 +83,52 @@ func msgPrivmsg(receiver string, msg string) string {
 }
 
 /* plugin helpers */
-func searchGiphy(term string) *Giphy{
+func searchGiphy(term string) (*Giphy, error) {
 	var giphy *Giphy = &Giphy{}
 
 	if term == "" {
 		term = "cat"
 	}
 	encoded := url.QueryEscape(term)
-	resource := fmt.Sprintf("http://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=%s", encoded)
+	resource := fmt.Sprintf("%s/v1/gifs/search?api_key=%s&q=%s", API_GIPHY, API_KEY_GIPHY, encoded)
 
 	resp, err := http.Get(resource)
 	if err != nil {
-		log.Fatal(err)
+		return giphy, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return giphy, err
 	}
 	if err = json.Unmarshal(body, giphy); err != nil {
-		log.Fatal(err)
+		return giphy, err
 	}
-	return giphy
+	return giphy, nil
 }
 
-func queryDuckDuckGo(term string) *DuckDuckGo {
+func queryDuckDuckGo(term string) (*DuckDuckGo, error) {
 	var ddg *DuckDuckGo = &DuckDuckGo{}
 
 	encoded := url.QueryEscape(term)
-	resource := fmt.Sprintf("http://api.duckduckgo.com?format=json&q=%s", encoded)
+	resource := fmt.Sprintf("%s?format=json&q=%s", API_DDG, encoded)
 
 	resp, err := http.Get(resource)
 	if err != nil {
-		log.Fatal(err)
+		return ddg, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return ddg, err
 	}
 	if err = json.Unmarshal(body, ddg); err != nil {
-		log.Fatal(err)
+		return ddg, err
 	}
-
-	return ddg
+	return ddg, nil
 }
 
-func timeDelta(weekday string, hour int, minute int) string {
+func timeDelta(weekday string, hour int, minute int) (string, error) {
 	now := time.Now()
 	wd := now.Weekday().String()
 	if wd == weekday {
@@ -141,96 +139,107 @@ func timeDelta(weekday string, hour int, minute int) string {
 		diff := beertime.Sub(now)
 
 		if diff.Seconds() > 0 {
-			return fmt.Sprintf("less than %d minute(s) to go...", int(math.Ceil(diff.Minutes())))
+			return fmt.Sprintf("less than %d minute(s) to go...", int(math.Ceil(diff.Minutes()))), nil
 		}
-		return "it's beertime!"
+		return "it's beertime!", nil
 	}
-	return fmt.Sprintf("it's only %s...", strings.ToLower(wd))
+	return fmt.Sprintf("it's only %s...", strings.ToLower(wd)), nil
 }
 
-func slapAction(target string) string {
+func slapAction(target string) (string, error) {
 	actions := []string {
 		"slaps", "kicks", "destroys", "annihilates", "punches",
 		"roundhouse kicks", "rusty hooks", "pwns", "owns"}
 	if strings.TrimSpace(target) != "" {
 		selected_action := actions[rand.Intn(len(actions))]
-		return fmt.Sprintf(ACTION + " " + selected_action + " " + target)
+		return fmt.Sprintf(ACTION + " " + selected_action + " " + target), nil
 	} else {
-		return fmt.Sprintf(ACTION + " zzzzz...")
+		return fmt.Sprintf(ACTION + " zzzzz..."), nil
 	}
 }
 
 /* plugins */
-func replyVer(pm Privmsg) string {
-	return msgPrivmsg(pm.Target, fmt.Sprintf("gerri version: %s", VERSION))
+func replyVer(pm Privmsg) (string, error) {
+	return msgPrivmsg(pm.Target, fmt.Sprintf("gerri version: %s", VERSION)), nil
 }
 
-func replyPing(pm Privmsg) string {
-	return msgPrivmsg(pm.Target, "meow")
+func replyPing(pm Privmsg) (string, error) {
+	return msgPrivmsg(pm.Target, ACTION + " meow"), nil
 }
 
-func replyGIF(pm Privmsg) string {
+func replyGIF(pm Privmsg) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
-	giphy := searchGiphy(msg)
-	if len(giphy.Data) > 0 {
-		m := fmt.Sprintf("http://media.giphy.com/media/%s/giphy.gif", giphy.Data[rand.Intn(len(giphy.Data))].ID)
-		return msgPrivmsg(pm.Target, m)
+	giphy, err := searchGiphy(msg)
+	if err != nil {
+		return "", err
 	}
-	return msgPrivmsg(pm.Target, "(zzzzz...)")
+	if len(giphy.Data) > 0 {
+		m := fmt.Sprintf("%s/media/%s/giphy.gif", GIPHY, giphy.Data[rand.Intn(len(giphy.Data))].ID)
+		return msgPrivmsg(pm.Target, m), nil
+	}
+	return msgPrivmsg(pm.Target, ACTION + " zzzzz..."), nil
 }
 
-func replyDay(pm Privmsg) string {
-	return msgPrivmsg(pm.Target, strings.ToLower(time.Now().Weekday().String()))
+func replyDay(pm Privmsg) (string, error) {
+	return msgPrivmsg(pm.Target, strings.ToLower(time.Now().Weekday().String())), nil
 }
 
-func replyWik(pm Privmsg) string {
+func replyWik(pm Privmsg) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
 	if strings.TrimSpace(msg) != "" {
-		ddg := queryDuckDuckGo(msg)
+		ddg, err := queryDuckDuckGo(msg)
+		if err != nil {
+			return "", err
+		}
 		if ddg.AbstractText != "" && ddg.AbstractURL != "" {
-			size := 30
 			words := strings.Split(ddg.AbstractText, " ")
 			var m string
-			if len(words) > size {
-				m = fmt.Sprintf("%s... (source: %s)", strings.Join(words[:size], " "), ddg.AbstractURL)
+			if len(words) > WIK_WORDS {
+				m = fmt.Sprintf("%s... (source: %s)", strings.Join(words[:WIK_WORDS], " "), ddg.AbstractURL)
 			} else {
 				m = fmt.Sprintf("%s (source: %s)", ddg.AbstractText, ddg.AbstractURL)
 			}
-			return msgPrivmsg(pm.Target, m)
+			return msgPrivmsg(pm.Target, m), nil
 		}
-		return msgPrivmsg(pm.Target, "(zzzzz...)")
+		return msgPrivmsg(pm.Target, ACTION + " zzzzz..."), nil
 	}
-	return ""
+	return "", nil
 }
 
-func replyBeertime(pm Privmsg) string {
-	return msgPrivmsg(pm.Target, timeDelta(BEERTIME_WD, BEERTIME_HR, BEERTIME_MIN))
+func replyBeertime(pm Privmsg) (string, error) {
+	td, err := timeDelta(BEERTIME_WD, BEERTIME_HR, BEERTIME_MIN)
+	if err != nil {
+		return "", err
+	}
+	return msgPrivmsg(pm.Target, td), nil
 }
 
-func replyJira(pm Privmsg) string {
+func replyJira(pm Privmsg) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
 	if strings.TrimSpace(msg) != "" {
-		return msgPrivmsg(pm.Target, JIRA + "/browse/" + strings.ToUpper(msg))
+		return msgPrivmsg(pm.Target, JIRA + "/browse/" + strings.ToUpper(msg)), nil
 	}
-	return msgPrivmsg(pm.Target, JIRA)
+	return msgPrivmsg(pm.Target, JIRA), nil
 }
 
-func replyAsk(pm Privmsg) string {
+func replyAsk(pm Privmsg) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
 	if strings.TrimSpace(msg) != "" {
 		rand.Seed(time.Now().UnixNano())
-		return msgPrivmsg(pm.Target, [2]string{"yes!", "no..."}[rand.Intn(2)])
+		return msgPrivmsg(pm.Target, [2]string{"yes!", "no..."}[rand.Intn(2)]), nil
 	}
-	return ""
+	return "", nil
 }
 
-func replySlap(pm Privmsg) string {
-	slap := slapAction(strings.Join(pm.Message[1:], " "))
-	return msgPrivmsg(pm.Target, slap)
+func replySlap(pm Privmsg) (string, error) {
+	slap, err := slapAction(strings.Join(pm.Message[1:], " "))
+	if err != nil {
+		return "", err
+	}
+	return msgPrivmsg(pm.Target, slap), nil
 }
 
-
-var repliers = map[string]func(Privmsg) string {
+var repliers = map[string]func(Privmsg) (string, error) {
 	":!ver": replyVer,
 	":!version": replyVer,
 	":!ping": replyPing,
@@ -243,13 +252,13 @@ var repliers = map[string]func(Privmsg) string {
 	":!slap": replySlap,
 }
 
-func buildReply(pm Privmsg) string {
+func buildReply(pm Privmsg) (string, error) {
 	/* replies PRIVMSG message */
 	fn, found := repliers[pm.Message[0]]
 	if found {
 		return fn(pm)
 	}
-	return ""
+	return "", nil
 }
 
 func connect(server string, port string) (net.Conn, error) {
@@ -286,20 +295,24 @@ func receive(ch <-chan string, conn net.Conn) {
 		}
 		log.Printf(line)
 
-		if strings.HasPrefix(line, PING) {
+		tokens := strings.Split(line, " ")
+		if tokens[0] == PING {
 			// reply PING with PONG
 			msg := msgPong(strings.Split(line, ":")[1])
 			conn.Write([]byte(msg))
 			log.Printf(msg)
 		} else {
 			// reply PRIVMSG
-			tokens := strings.Split(line, " ")
 			if len(tokens) >= 4 && tokens[1] == PRIVMSG {
 				pm := Privmsg{Source: tokens[0], Target: tokens[2], Message: tokens[3:]}
-				reply := buildReply(pm)
-				if reply != "" {
-					log.Printf("reply: %s", reply)
-					conn.Write([]byte(reply))
+				reply, err := buildReply(pm)
+				if err != nil {
+					log.Printf("error: %s", err)
+				} else {
+					if reply != "" {
+						log.Printf("reply: %s", reply)
+						conn.Write([]byte(reply))
+					}
 				}
 			}
 		}
