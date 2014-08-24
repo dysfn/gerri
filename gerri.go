@@ -90,7 +90,7 @@ func searchGiphy(term string) (*Giphy, error) {
 		term = "cat"
 	}
 	encoded := url.QueryEscape(term)
-	resource := fmt.Sprintf("%s/v1/gifs/search?api_key=%s&q=%s", API_GIPHY, API_KEY_GIPHY, encoded)
+	resource := fmt.Sprintf("%s/v1/gifs/search?api_key=%s&q=%s", GIPHY_API, GIPHY_KEY, encoded)
 
 	resp, err := http.Get(resource)
 	if err != nil {
@@ -111,7 +111,7 @@ func queryDuckDuckGo(term string) (*DuckDuckGo, error) {
 	var ddg *DuckDuckGo = &DuckDuckGo{}
 
 	encoded := url.QueryEscape(term)
-	resource := fmt.Sprintf("%s?format=json&q=%s", API_DDG, encoded)
+	resource := fmt.Sprintf("%s?format=json&q=%s", DDG_API, encoded)
 
 	resp, err := http.Get(resource)
 	if err != nil {
@@ -252,13 +252,20 @@ var repliers = map[string]func(Privmsg) (string, error) {
 	":!slap": replySlap,
 }
 
-func buildReply(pm Privmsg) (string, error) {
+func buildReply(conn net.Conn, pm Privmsg) {
 	/* replies PRIVMSG message */
 	fn, found := repliers[pm.Message[0]]
 	if found {
-		return fn(pm)
+		reply, err := fn(pm)
+		if err != nil {
+			log.Printf("error: %s", err)
+		} else {
+			if reply != "" {
+				log.Printf("reply: %s", reply)
+				conn.Write([]byte(reply))
+			}
+		}
 	}
-	return "", nil
 }
 
 func connect(server string, port string) (net.Conn, error) {
@@ -305,15 +312,7 @@ func receive(ch <-chan string, conn net.Conn) {
 			// reply PRIVMSG
 			if len(tokens) >= 4 && tokens[1] == PRIVMSG {
 				pm := Privmsg{Source: tokens[0], Target: tokens[2], Message: tokens[3:]}
-				reply, err := buildReply(pm)
-				if err != nil {
-					log.Printf("error: %s", err)
-				} else {
-					if reply != "" {
-						log.Printf("reply: %s", reply)
-						conn.Write([]byte(reply))
-					}
-				}
+				go buildReply(conn, pm)  // reply asynchronously
 			}
 		}
 	}
