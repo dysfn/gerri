@@ -28,7 +28,7 @@ const (
 	PING = "PING"
 	PONG = "PONG"
 	PRIVMSG = "PRIVMSG"
-	ACTION = "\x01ACTION"
+	ACTION = "ACTION"
 	SUFFIX = "\r\n"
 	BEERTIME_WD = "Friday"
 	BEERTIME_HR = 16
@@ -80,6 +80,10 @@ func msgPong(host string) string {
 
 func msgPrivmsg(receiver string, msg string) string {
 	return PRIVMSG + " " + receiver + " :" + msg + SUFFIX
+}
+
+func msgPrivmsgAction(receiver string, msg string) string {
+	return fmt.Sprintf("%s %s :\001%s %s\001%s", PRIVMSG, receiver, ACTION, msg, SUFFIX)
 }
 
 /* plugin helpers */
@@ -152,10 +156,9 @@ func slapAction(target string) (string, error) {
 		"roundhouse kicks", "rusty hooks", "pwns", "owns"}
 	if strings.TrimSpace(target) != "" {
 		selected_action := actions[rand.Intn(len(actions))]
-		return fmt.Sprintf(ACTION + " " + selected_action + " " + target), nil
-	} else {
-		return fmt.Sprintf(ACTION + " zzzzz..."), nil
+		return fmt.Sprintf("%s %s", selected_action, target), nil
 	}
+	return "zzzzz...", nil
 }
 
 /* plugins */
@@ -164,7 +167,7 @@ func replyVer(pm Privmsg) (string, error) {
 }
 
 func replyPing(pm Privmsg) (string, error) {
-	return msgPrivmsg(pm.Target, ACTION + " meow"), nil
+	return msgPrivmsgAction(pm.Target, "meows"), nil
 }
 
 func replyGIF(pm Privmsg) (string, error) {
@@ -177,7 +180,7 @@ func replyGIF(pm Privmsg) (string, error) {
 		m := fmt.Sprintf("%s/media/%s/giphy.gif", GIPHY, giphy.Data[rand.Intn(len(giphy.Data))].ID)
 		return msgPrivmsg(pm.Target, m), nil
 	}
-	return msgPrivmsg(pm.Target, ACTION + " zzzzz..."), nil
+	return msgPrivmsgAction(pm.Target, "zzzzz..."), nil
 }
 
 func replyDay(pm Privmsg) (string, error) {
@@ -195,13 +198,14 @@ func replyWik(pm Privmsg) (string, error) {
 			words := strings.Split(ddg.AbstractText, " ")
 			var m string
 			if len(words) > WIK_WORDS {
-				m = fmt.Sprintf("%s... (source: %s)", strings.Join(words[:WIK_WORDS], " "), ddg.AbstractURL)
+				text := strings.Join(words[:WIK_WORDS], " ")
+				m = fmt.Sprintf("%s... (source: %s)", text, ddg.AbstractURL)
 			} else {
 				m = fmt.Sprintf("%s (source: %s)", ddg.AbstractText, ddg.AbstractURL)
 			}
 			return msgPrivmsg(pm.Target, m), nil
 		}
-		return msgPrivmsg(pm.Target, ACTION + " zzzzz..."), nil
+		return msgPrivmsgAction(pm.Target, "zzzzz..."), nil
 	}
 	return "", nil
 }
@@ -236,7 +240,7 @@ func replySlap(pm Privmsg) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return msgPrivmsg(pm.Target, slap), nil
+	return msgPrivmsgAction(pm.Target, slap), nil
 }
 
 var repliers = map[string]func(Privmsg) (string, error) {
