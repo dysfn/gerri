@@ -1,0 +1,17 @@
+{
+    "server": "chat.freenode.net",
+    "port": "8002",
+    "nick": "gerri",
+    "channel": "#microamp",
+    "wikMaxWords": 25,
+    "giphy": "http://media.giphy.com",
+    "giphyApi": "http://api.giphy.com",
+    "giphyKey": "dc6zaTOxFJmzC",
+    "ddgApi": "http://api.duckduckgo.com",
+    "jira": "https://webdrive.atlassian.net",
+    "beertime": {
+        "day": "Friday",
+        "hour": 16,
+        "minute": 30
+    }
+}

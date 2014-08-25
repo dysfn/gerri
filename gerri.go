@@ -22,6 +22,7 @@ import (
 
 const (
 	VERSION = "0.2.1"
+	CONFIG = "config.json"  // config filename
 	USER = "USER"
 	NICK = "NICK"
 	JOIN = "JOIN"
@@ -30,18 +31,29 @@ const (
 	PRIVMSG = "PRIVMSG"
 	ACTION = "ACTION"
 	SUFFIX = "\r\n"
-	BEERTIME_WD = "Friday"
-	BEERTIME_HR = 16
-	BEERTIME_MIN = 30
-	WIK_WORDS = 25
-	JIRA = "https://webdrive.atlassian.net"
-	GIPHY = "http://media.giphy.com"
-	GIPHY_API = "http://api.giphy.com"
-	GIPHY_KEY = "dc6zaTOxFJmzC"
-	DDG_API = "http://api.duckduckgo.com"
 )
 
 /* structs */
+type Config struct {
+	Server string
+	Port string
+	Nick string
+	Channel string
+	WikMaxWords int
+	Giphy string
+	GiphyApi string
+	DdgApi string
+	GiphyKey string
+	Jira string
+	Beertime Beertime
+}
+
+type Beertime struct {
+	Day string
+	Hour int
+	Minute int
+}
+
 type Privmsg struct {
 	Source string
 	Target string
@@ -87,14 +99,14 @@ func msgPrivmsgAction(receiver string, msg string) string {
 }
 
 /* plugin helpers */
-func searchGiphy(term string) (*Giphy, error) {
+func searchGiphy(term string, config *Config) (*Giphy, error) {
 	var giphy *Giphy = &Giphy{}
 
 	if term == "" {
 		term = "cat"
 	}
 	encoded := url.QueryEscape(term)
-	resource := fmt.Sprintf("%s/v1/gifs/search?api_key=%s&q=%s", GIPHY_API, GIPHY_KEY, encoded)
+	resource := fmt.Sprintf("%s/v1/gifs/search?api_key=%s&q=%s", config.GiphyApi, config.GiphyKey, encoded)
 
 	resp, err := http.Get(resource)
 	if err != nil {
@@ -111,11 +123,11 @@ func searchGiphy(term string) (*Giphy, error) {
 	return giphy, nil
 }
 
-func queryDuckDuckGo(term string) (*DuckDuckGo, error) {
+func queryDuckDuckGo(term string, config *Config) (*DuckDuckGo, error) {
 	var ddg *DuckDuckGo = &DuckDuckGo{}
 
 	encoded := url.QueryEscape(term)
-	resource := fmt.Sprintf("%s?format=json&q=%s", DDG_API, encoded)
+	resource := fmt.Sprintf("%s?format=json&q=%s", config.DdgApi, encoded)
 
 	resp, err := http.Get(resource)
 	if err != nil {
@@ -162,43 +174,43 @@ func slapAction(target string) (string, error) {
 }
 
 /* plugins */
-func replyVer(pm Privmsg) (string, error) {
+func replyVer(pm Privmsg, config *Config) (string, error) {
 	return msgPrivmsg(pm.Target, fmt.Sprintf("gerri version: %s", VERSION)), nil
 }
 
-func replyPing(pm Privmsg) (string, error) {
+func replyPing(pm Privmsg, config *Config) (string, error) {
 	return msgPrivmsgAction(pm.Target, "meows"), nil
 }
 
-func replyGIF(pm Privmsg) (string, error) {
+func replyGIF(pm Privmsg, config *Config) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
-	giphy, err := searchGiphy(msg)
+	giphy, err := searchGiphy(msg, config)
 	if err != nil {
 		return "", err
 	}
 	if len(giphy.Data) > 0 {
-		m := fmt.Sprintf("%s/media/%s/giphy.gif", GIPHY, giphy.Data[rand.Intn(len(giphy.Data))].ID)
+		m := fmt.Sprintf("%s/media/%s/giphy.gif", config.Giphy, giphy.Data[rand.Intn(len(giphy.Data))].ID)
 		return msgPrivmsg(pm.Target, m), nil
 	}
 	return msgPrivmsgAction(pm.Target, "zzzzz..."), nil
 }
 
-func replyDay(pm Privmsg) (string, error) {
+func replyDay(pm Privmsg, config *Config) (string, error) {
 	return msgPrivmsg(pm.Target, strings.ToLower(time.Now().Weekday().String())), nil
 }
 
-func replyWik(pm Privmsg) (string, error) {
+func replyWik(pm Privmsg, config *Config) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
 	if strings.TrimSpace(msg) != "" {
-		ddg, err := queryDuckDuckGo(msg)
+		ddg, err := queryDuckDuckGo(msg, config)
 		if err != nil {
 			return "", err
 		}
 		if ddg.AbstractText != "" && ddg.AbstractURL != "" {
 			words := strings.Split(ddg.AbstractText, " ")
 			var m string
-			if len(words) > WIK_WORDS {
-				text := strings.Join(words[:WIK_WORDS], " ")
+			if len(words) > config.WikMaxWords {
+				text := strings.Join(words[:config.WikMaxWords], " ")
 				m = fmt.Sprintf("%s... (source: %s)", text, ddg.AbstractURL)
 			} else {
 				m = fmt.Sprintf("%s (source: %s)", ddg.AbstractText, ddg.AbstractURL)
@@ -210,23 +222,23 @@ func replyWik(pm Privmsg) (string, error) {
 	return "", nil
 }
 
-func replyBeertime(pm Privmsg) (string, error) {
-	td, err := timeDelta(BEERTIME_WD, BEERTIME_HR, BEERTIME_MIN)
+func replyBeertime(pm Privmsg, config *Config) (string, error) {
+	td, err := timeDelta(config.Beertime.Day, config.Beertime.Hour, config.Beertime.Minute)
 	if err != nil {
 		return "", err
 	}
 	return msgPrivmsg(pm.Target, td), nil
 }
 
-func replyJira(pm Privmsg) (string, error) {
+func replyJira(pm Privmsg, config *Config) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
 	if strings.TrimSpace(msg) != "" {
-		return msgPrivmsg(pm.Target, JIRA + "/browse/" + strings.ToUpper(msg)), nil
+		return msgPrivmsg(pm.Target, config.Jira + "/browse/" + strings.ToUpper(msg)), nil
 	}
-	return msgPrivmsg(pm.Target, JIRA), nil
+	return msgPrivmsg(pm.Target, config.Jira), nil
 }
 
-func replyAsk(pm Privmsg) (string, error) {
+func replyAsk(pm Privmsg, config *Config) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
 	if strings.TrimSpace(msg) != "" {
 		rand.Seed(time.Now().UnixNano())
@@ -235,7 +247,7 @@ func replyAsk(pm Privmsg) (string, error) {
 	return "", nil
 }
 
-func replySlap(pm Privmsg) (string, error) {
+func replySlap(pm Privmsg, config *Config) (string, error) {
 	slap, err := slapAction(strings.Join(pm.Message[1:], " "))
 	if err != nil {
 		return "", err
@@ -243,7 +255,7 @@ func replySlap(pm Privmsg) (string, error) {
 	return msgPrivmsgAction(pm.Target, slap), nil
 }
 
-var repliers = map[string]func(Privmsg) (string, error) {
+var repliers = map[string]func(Privmsg, *Config) (string, error) {
 	":!ver": replyVer,
 	":!version": replyVer,
 	":!ping": replyPing,
@@ -260,7 +272,7 @@ func buildReply(conn net.Conn, pm Privmsg) {
 	/* replies PRIVMSG message */
 	fn, found := repliers[pm.Message[0]]
 	if found {
-		reply, err := fn(pm)
+		reply, err := fn(pm, readConfig(CONFIG))
 		if err != nil {
 			log.Printf("error: %s", err)
 		} else {
@@ -322,20 +334,34 @@ func receive(ch <-chan string, conn net.Conn) {
 	}
 }
 
+func readConfig(filename string) *Config {
+	/* reads config from file */
+	file, e := ioutil.ReadFile(filename)
+	if e != nil {
+		fmt.Printf("File error: %v\n", e)
+	}
+
+	var config *Config = &Config{}
+	if err := json.Unmarshal(file, config); err != nil {
+		log.Fatal(err)
+	}
+	return config
+}
+
 func main() {
-	server, port := "chat.freenode.net", "8002"
-	nick, channel := "gerri", "#microamp"
+	// read config from file
+	config := readConfig(CONFIG)
 
 	// connect to irc
-	conn, err := connect(server, port)
+	conn, err := connect(config.Server, config.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// send messages: USER/NICK/JOIN
-	conn.Write([]byte(msgUser(nick)))
-	conn.Write([]byte(msgNick(nick)))
-	conn.Write([]byte(msgJoin(channel)))
+	conn.Write([]byte(msgUser(config.Nick)))
+	conn.Write([]byte(msgNick(config.Nick)))
+	conn.Write([]byte(msgJoin(config.Channel)))
 
 	defer conn.Close()
 
