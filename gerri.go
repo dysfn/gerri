@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	VERSION = "0.2.2"
+	VERSION = "0.2.3"
 	CONFIG = "config.json"  // config filename
 	USER = "USER"
 	NICK = "NICK"
@@ -242,6 +242,10 @@ func replyAsk(pm Privmsg, config *Config) (string, error) {
 	msg := strings.Join(pm.Message[1:], " ")
 	if strings.TrimSpace(msg) != "" {
 		rand.Seed(time.Now().UnixNano())
+		ors := strings.Split(msg, " or ")
+		if len(ors) > 1 {
+			return msgPrivmsg(pm.Target, ors[rand.Intn(len(ors))]), nil
+		}
 		return msgPrivmsg(pm.Target, [2]string{"yes!", "no..."}[rand.Intn(2)]), nil
 	}
 	return "", nil
