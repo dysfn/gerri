@@ -13,5 +13,6 @@
         "day": "Friday",
         "hour": 16,
         "minute": 30
-    }
+    },
+    "quotedb": "./quotes.db"
 }
