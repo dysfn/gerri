@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	VERSION = "0.2.3"
+	VERSION = "0.2.4"
 	CONFIG = "config.json"	// config filename
 	USER = "USER"
 	NICK = "NICK"
@@ -284,9 +284,9 @@ func replyQuote(pm Privmsg, config *Config) (string, error) {
 	if strings.Count(msg, "\"") == 2 {
 		if storeQuote(msg, pm.Source) {
 			return msgPrivmsg(pm.Target, "Got it!"), nil
-		} 
+		}
 		return "", nil
-	} 
+	}
 
 	// At this point the assumption is that we just want a random quote
 	quoteStr, err := getRandomQuote()
@@ -333,7 +333,7 @@ func checkQuoteDB(db *sql.DB) (bool) {
 	// Check to see if this is a newly created DB or not by checking for the
 	// existence of our main quote table.
 	rows, e := db.Query(`
-		select name from sqlite_master 
+		select name from sqlite_master
 		where type='table' and name='quote';
 	`)
 	if e != nil {
@@ -346,9 +346,9 @@ func checkQuoteDB(db *sql.DB) (bool) {
 func setupQuoteDB(db *sql.DB) {
 	// Initialise the DB schema
 	_, e := db.Exec(`
-	create table quote 
+	create table quote
 		(
-			id integer not null primary key, 
+			id integer not null primary key,
 			text text,
 			created_by text,
 			created_timestamp text
@@ -363,13 +363,13 @@ func setupQuoteDB(db *sql.DB) {
 func getRandomQuote() (string, error) {
 	row, err := quoteDB.Query(`select text from quote order by random() limit 1;`)
 	if err != nil || !row.Next() {
-		return "", err	  
+		return "", err
 	}
 	defer row.Close()
 
 	var quoteStr string
 	row.Scan(&quoteStr)
-	return quoteStr, err 
+	return quoteStr, err
 }
 
 func getQuote(quoteID int64) (string, error) {
@@ -381,10 +381,10 @@ func getQuote(quoteID int64) (string, error) {
 	var quoteStr string
 	err = stmt.QueryRow(quoteID).Scan(&quoteStr)
 	if err != nil {
-		return "", err	  
+		return "", err
 	}
 
-	return quoteStr, err 
+	return quoteStr, err
 }
 
 var repliers = map[string]func(Privmsg, *Config) (string, error) {
