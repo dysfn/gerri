@@ -121,7 +121,7 @@ func main() {
 	// read config from file
 	config := readConfig(CONFIG)
 
-  // connect to quote db
+	// connect to quote db
 	if len(config.QuoteDB) != 0 {
 		plugin.QuoteDB = plugin.ConnectQuoteDB(config.QuoteDB)
 		defer plugin.QuoteDB.Close()
