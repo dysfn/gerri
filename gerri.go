@@ -19,23 +19,22 @@ import (
 )
 
 const (
-	VERSION = "0.2.4"
 	CONFIG = "config.json"	// config filename
 )
 
 //* plugin mappings */
 var repliers = map[string]func(data.Privmsg, *data.Config) (string, error) {
-	":!ver": plugin.ReplyVer,
-	":!version": plugin.ReplyVer,
-	":!ping": plugin.ReplyPing,
+	":!ask": plugin.ReplyAsk,
+	":!beertime": plugin.ReplyBeertime,
 	":!day": plugin.ReplyDay,
 	":!gif": plugin.ReplyGIF,
-	":!wik": plugin.ReplyWik,
-	":!beertime": plugin.ReplyBeertime,
 	":!jira": plugin.ReplyJira,
-	":!ask": plugin.ReplyAsk,
-	":!slap": plugin.ReplySlap,
+	":!ping": plugin.ReplyPing,
 	":!quote": plugin.ReplyQuote,
+	":!slap": plugin.ReplySlap,
+	":!ver": plugin.ReplyVer,
+	":!version": plugin.ReplyVer,
+	":!wik": plugin.ReplyWik,
 }
 
 func buildReply(conn net.Conn, pm data.Privmsg) {
