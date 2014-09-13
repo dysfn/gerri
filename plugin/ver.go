@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	VERSION = "0.3.1"
+	VERSION = "0.3.2"
 )
 
 func ReplyVer(pm data.Privmsg, config *data.Config) (string, error) {
