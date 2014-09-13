@@ -22,7 +22,7 @@ const (
 	CONFIG = "config.json"	// config filename
 )
 
-//* plugin mappings */
+/* plugin mappings */
 var repliers = map[string]func(data.Privmsg, *data.Config) (string, error) {
 	":!ask": plugin.ReplyAsk,
 	":!beertime": plugin.ReplyBeertime,
@@ -32,6 +32,7 @@ var repliers = map[string]func(data.Privmsg, *data.Config) (string, error) {
 	":!ping": plugin.ReplyPing,
 	":!quote": plugin.ReplyQuote,
 	":!slap": plugin.ReplySlap,
+	":!title": plugin.ReplyTitle,
 	":!ver": plugin.ReplyVer,
 	":!version": plugin.ReplyVer,
 	":!wik": plugin.ReplyWik,
