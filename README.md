@@ -1,9 +1,9 @@
 gerri
 =====
 
-Minimal IRC bot in Go (inspired by phenny/jenni)
+Minimal IRC bot in Go (inspired by [phenny](https://github.com/sbp/phenny) and [jenni](https://github.com/myano/jenni))
 
-(Originaly developed for Web Drive #devteam chatroom)
+(Originally developed for Web Drive #devteam chatroom)
 
 Dependencies
 ------------
