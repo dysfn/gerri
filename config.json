@@ -4,6 +4,8 @@
     "nick": "gerri",
     "channel": "#microamp",
     "wikMaxWords": 25,
+    "ud": "http://www.urbandictionary.com/define.php",
+    "udMaxWords": 25,
     "giphy": "http://media.giphy.com",
     "giphyApi": "http://api.giphy.com",
     "giphyKey": "dc6zaTOxFJmzC",

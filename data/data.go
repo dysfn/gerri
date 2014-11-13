@@ -10,6 +10,8 @@ type Config struct {
 	Nick string
 	Channel string
 	WikMaxWords int
+	Ud string
+	UdMaxWords int
 	Giphy string
 	GiphyApi string
 	DdgApi string

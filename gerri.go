@@ -33,6 +33,7 @@ var repliers = map[string]func(data.Privmsg, *data.Config) (string, error) {
 	":!quote": plugin.ReplyQuote,
 	":!slap": plugin.ReplySlap,
 	":!title": plugin.ReplyTitle,
+	":!ud": plugin.ReplyUd,
 	":!ver": plugin.ReplyVer,
 	":!version": plugin.ReplyVer,
 	":!wik": plugin.ReplyWik,
