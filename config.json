@@ -9,6 +9,7 @@
     "giphy": "http://media.giphy.com",
     "giphyApi": "http://api.giphy.com",
     "giphyKey": "dc6zaTOxFJmzC",
+    "ddg": "https://duckduckgo.com",
     "ddgApi": "http://api.duckduckgo.com",
     "jira": "https://webdrive.atlassian.net",
     "beertime": {

@@ -27,6 +27,7 @@ var repliers = map[string]func(data.Privmsg, *data.Config) (string, error) {
 	":!ask": plugin.ReplyAsk,
 	":!beertime": plugin.ReplyBeertime,
 	":!day": plugin.ReplyDay,
+	":!ddg": plugin.ReplyDdg,
 	":!gif": plugin.ReplyGIF,
 	":!jira": plugin.ReplyJira,
 	":!ping": plugin.ReplyPing,

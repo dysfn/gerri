@@ -14,6 +14,7 @@ type Config struct {
 	UdMaxWords int
 	Giphy string
 	GiphyApi string
+	Ddg string
 	DdgApi string
 	GiphyKey string
 	Jira string
