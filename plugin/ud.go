@@ -33,13 +33,10 @@ func formatResult(result string, source string, limit int) string {
 func ReplyUd(pm data.Privmsg, config *data.Config) (string, error) {
 	if len(pm.Message) >= 2 {
 		term := url.QueryEscape(strings.TrimSpace(strings.Join(pm.Message[1:], " ")))
-		fmt.Println(term)
 		source := fmt.Sprintf("%s?term=%s", config.Ud, term)
-		fmt.Println(source)
 
 		doc, err := goquery.NewDocument(source)
 		if err != nil {
-			fmt.Println("error #1")
 			return "", nil
 		}
 
