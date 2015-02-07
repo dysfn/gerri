@@ -8,36 +8,37 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/microamp/gerri/cmd"
+	"github.com/microamp/gerri/data"
+	"github.com/microamp/gerri/plugin"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/textproto"
 	"strings"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
-	"github.com/microamp/gerri/plugin"
 )
 
 const (
-	CONFIG = "config.json"	// config filename
+	CONFIG = "config.json" // config filename
 )
 
 /* plugin mappings */
-var repliers = map[string]func(data.Privmsg, *data.Config) (string, error) {
-	":!ask": plugin.ReplyAsk,
+var repliers = map[string]func(data.Privmsg, *data.Config) (string, error){
+	":!advice":   plugin.ReplyAdvice,
+	":!ask":      plugin.ReplyAsk,
 	":!beertime": plugin.ReplyBeertime,
-	":!day": plugin.ReplyDay,
-	":!ddg": plugin.ReplyDdg,
-	":!gif": plugin.ReplyGIF,
-	":!jira": plugin.ReplyJira,
-	":!ping": plugin.ReplyPing,
-	":!quote": plugin.ReplyQuote,
-	":!slap": plugin.ReplySlap,
-	":!title": plugin.ReplyTitle,
-	":!ud": plugin.ReplyUd,
-	":!ver": plugin.ReplyVer,
-	":!version": plugin.ReplyVer,
-	":!wik": plugin.ReplyWik,
+	":!day":      plugin.ReplyDay,
+	":!ddg":      plugin.ReplyDdg,
+	":!gif":      plugin.ReplyGIF,
+	":!jira":     plugin.ReplyJira,
+	":!ping":     plugin.ReplyPing,
+	":!quote":    plugin.ReplyQuote,
+	":!slap":     plugin.ReplySlap,
+	":!title":    plugin.ReplyTitle,
+	":!ud":       plugin.ReplyUd,
+	":!ver":      plugin.ReplyVer,
+	":!version":  plugin.ReplyVer,
+	":!wik":      plugin.ReplyWik,
 }
 
 func buildReply(conn net.Conn, pm data.Privmsg) {
@@ -59,7 +60,7 @@ func buildReply(conn net.Conn, pm data.Privmsg) {
 func connect(server string, port string) (net.Conn, error) {
 	/* establishes irc connection  */
 	log.Printf("connecting to %s:%s...", server, port)
-	conn, err := net.Dial("tcp", server + ":" + port)
+	conn, err := net.Dial("tcp", server+":"+port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,7 +101,7 @@ func receive(ch <-chan string, conn net.Conn) {
 			// reply PRIVMSG
 			if len(tokens) >= 4 && tokens[1] == cmd.PRIVMSG {
 				pm := data.Privmsg{Source: tokens[0], Target: tokens[2], Message: tokens[3:]}
-				go buildReply(conn, pm)  // reply asynchronously
+				go buildReply(conn, pm) // reply asynchronously
 			}
 		}
 	}

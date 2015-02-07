@@ -17,5 +17,6 @@
         "hour": 16,
         "minute": 30
     },
+    "adviceApi": "http://www.leonatkinson.com/random/index.php/rest.html?method=advice",
     "quotedb": "./quotes.db"
 }
