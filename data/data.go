@@ -22,6 +22,7 @@ type Config struct {
 	AdviceApi   string
 	QuoteDB     string
 	SlapActions []string
+	PyApi       string
 }
 
 type Beertime struct {

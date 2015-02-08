@@ -21,5 +21,6 @@
         "slaps", "kicks", "destroys", "annihilates", "punches",
 		"roundhouse kicks", "rusty hooks", "pwns", "owns"],
     "adviceApi": "http://www.leonatkinson.com/random/index.php/rest.html?method=advice",
+    "pyApi": "http://tumbolia.appspot.com/py",
     "quotedb": "./quotes.db"
 }
