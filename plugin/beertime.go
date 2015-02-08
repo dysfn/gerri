@@ -6,11 +6,11 @@ usage: !beertime
 
 import (
 	"fmt"
+	"github.com/microamp/gerri/cmd"
+	"github.com/microamp/gerri/data"
 	"math"
 	"strings"
 	"time"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
 )
 
 func timeDelta(weekday string, hour int, minute int) (string, error) {

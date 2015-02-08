@@ -7,12 +7,12 @@ usage: !wik whatever
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/microamp/gerri/cmd"
+	"github.com/microamp/gerri/data"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
 )
 
 func queryDuckDuckGo(term string, config *data.Config) (*data.DuckDuckGo, error) {

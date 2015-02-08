@@ -5,10 +5,10 @@ usage: !day
 */
 
 import (
-	"strings"
-	"time"
 	"github.com/microamp/gerri/cmd"
 	"github.com/microamp/gerri/data"
+	"strings"
+	"time"
 )
 
 func ReplyDay(pm data.Privmsg, config *data.Config) (string, error) {

@@ -7,14 +7,14 @@ IRC commands
 import "fmt"
 
 const (
-	USER = "USER"
-	NICK = "NICK"
-	JOIN = "JOIN"
-	PING = "PING"
-	PONG = "PONG"
+	USER    = "USER"
+	NICK    = "NICK"
+	JOIN    = "JOIN"
+	PING    = "PING"
+	PONG    = "PONG"
 	PRIVMSG = "PRIVMSG"
-	ACTION = "ACTION"
-	SUFFIX = "\r\n"
+	ACTION  = "ACTION"
+	SUFFIX  = "\r\n"
 )
 
 func User(nick string) string {

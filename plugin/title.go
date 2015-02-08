@@ -5,10 +5,10 @@ usage: !title http://example.com
 */
 
 import (
-	"strings"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/microamp/gerri/cmd"
 	"github.com/microamp/gerri/data"
-	"github.com/PuerkitoBio/goquery"
+	"strings"
 )
 
 func ReplyTitle(pm data.Privmsg, config *data.Config) (string, error) {

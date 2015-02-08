@@ -7,18 +7,18 @@ usage: !quote "i'm your father" - darth vader
 */
 
 import (
-	"log"
 	"database/sql"
-	"strings"
-	"strconv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/microamp/gerri/cmd"
 	"github.com/microamp/gerri/data"
+	"log"
+	"strconv"
+	"strings"
 )
 
 var QuoteDB *sql.DB = nil
 
-func storeQuote(quoteStr string, sender string) (bool) {
+func storeQuote(quoteStr string, sender string) bool {
 	stmt, err := QuoteDB.Prepare(`
 		insert into quote(text, created_by, created_timestamp)
 		values(?, ?, datetime('now'));
@@ -37,7 +37,7 @@ func storeQuote(quoteStr string, sender string) (bool) {
 	return true
 }
 
-func checkQuoteDB(db *sql.DB) (bool) {
+func checkQuoteDB(db *sql.DB) bool {
 	// Check to see if this is a newly created DB or not by checking for the
 	// existence of our main quote table.
 	rows, e := db.Query(`
@@ -95,7 +95,7 @@ func getQuote(quoteID int64) (string, error) {
 	return quoteStr, err
 }
 
-func ConnectQuoteDB(filename string) (*sql.DB) {
+func ConnectQuoteDB(filename string) *sql.DB {
 	// Opens and returns a database connection for the specificed sqlite3 DB.
 	// If a DB does not already exist, it will be created.
 	db, e := sql.Open("sqlite3", filename)

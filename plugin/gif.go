@@ -8,13 +8,13 @@ usage: !gif kittens
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/microamp/gerri/cmd"
+	"github.com/microamp/gerri/data"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
 )
 
 func searchGiphy(term string, config *data.Config) (*data.Giphy, error) {
