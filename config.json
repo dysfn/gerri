@@ -17,6 +17,9 @@
         "hour": 16,
         "minute": 30
     },
+    "slapActions": [
+        "slaps", "kicks", "destroys", "annihilates", "punches",
+		"roundhouse kicks", "rusty hooks", "pwns", "owns"],
     "adviceApi": "http://www.leonatkinson.com/random/index.php/rest.html?method=advice",
     "quotedb": "./quotes.db"
 }

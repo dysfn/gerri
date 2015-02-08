@@ -21,6 +21,7 @@ type Config struct {
 	Beertime    Beertime
 	AdviceApi   string
 	QuoteDB     string
+	SlapActions []string
 }
 
 type Beertime struct {
