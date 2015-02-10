@@ -23,6 +23,9 @@ type Config struct {
 	QuoteDB     string
 	SlapActions []string
 	PyApi       string
+	WaApi       string
+	WaKey       string
+	WaMaxWords  int
 }
 
 type Beertime struct {
@@ -52,4 +55,13 @@ type Giphy struct {
 
 type Advice struct {
 	Quote string `xml:"quote"`
+}
+
+type Pod struct {
+	Title     string `xml:"title,attr"`
+	Plaintext string `xml:"subpod>plaintext"`
+}
+
+type WA struct {
+	Pods []Pod `xml:"pod"`
 }

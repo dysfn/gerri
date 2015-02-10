@@ -40,6 +40,7 @@ var repliers = map[string]func(data.Privmsg, *data.Config) (string, error){
 	":!ver":      plugin.ReplyVer,
 	":!version":  plugin.ReplyVer,
 	":!wik":      plugin.ReplyWik,
+	":!wa":       plugin.ReplyWA,
 }
 
 func buildReply(conn net.Conn, pm data.Privmsg) {

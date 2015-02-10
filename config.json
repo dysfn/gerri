@@ -11,7 +11,7 @@
     "giphyKey": "dc6zaTOxFJmzC",
     "ddg": "https://duckduckgo.com",
     "ddgApi": "http://api.duckduckgo.com",
-    "jira": "https://webdrive.atlassian.net",
+    "jira": "https://acme.atlassian.net",
     "beertime": {
         "day": "Friday",
         "hour": 16,
@@ -22,5 +22,8 @@
 		"roundhouse kicks", "rusty hooks", "pwns", "owns"],
     "adviceApi": "http://www.leonatkinson.com/random/index.php/rest.html?method=advice",
     "pyApi": "http://tumbolia.appspot.com/py",
+    "waApi": "http://api.wolframalpha.com/v2/query",
+    "waKey": "",
+    "waMaxWords": 30,
     "quotedb": "./quotes.db"
 }
