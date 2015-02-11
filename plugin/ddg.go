@@ -29,7 +29,8 @@ func ReplyDdg(pm data.Privmsg, config *data.Config) (string, error) {
 
 		result := doc.Find("div.results_links").Not("div.web-result-sponsored") // excluded sponsored result
 		title := strings.TrimSpace(result.Find("a.large").First().Text())
-		url := strings.TrimSpace(result.Find("div.url").First().Text())
+		url, _ := result.Find("a.large").Attr("href")
+		url = strings.TrimSpace(url)
 
 		if title != "" && url != "" {
 			return cmd.Privmsg(pm.Target, fmt.Sprintf("%s (link: %s)", title, url)), nil
