@@ -59,7 +59,9 @@ func ReplyWA(pm data.Privmsg, config *data.Config) (string, error) {
 			result_string = fmt.Sprintf("%s...", text)
 		}
 
-		return cmd.Privmsg(pm.Target, result_string), nil
+		if result_string != "" {
+			return cmd.Privmsg(pm.Target, result_string), nil
+		}
 	}
 	return cmd.PrivmsgAction(pm.Target, "zzzzz..."), nil
 }
