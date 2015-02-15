@@ -7,8 +7,8 @@ usage: !ddg rehab in auckland
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"net/url"
 	"strings"
 )

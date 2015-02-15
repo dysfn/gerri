@@ -5,8 +5,8 @@ usage: !day
 */
 
 import (
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"strings"
 	"time"
 )

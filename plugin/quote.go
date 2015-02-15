@@ -9,8 +9,8 @@ usage: !quote "i'm your father" - darth vader
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"log"
 	"strconv"
 	"strings"

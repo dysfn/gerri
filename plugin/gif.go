@@ -8,8 +8,8 @@ usage: !gif kittens
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"io/ioutil"
 	"math/rand"
 	"net/http"

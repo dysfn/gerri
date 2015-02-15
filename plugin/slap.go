@@ -6,8 +6,8 @@ usage: !slap someone
 
 import (
 	"fmt"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"math/rand"
 	"regexp"
 	"strings"

@@ -7,8 +7,8 @@ usage: !wa Richard Stallman
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"io/ioutil"
 	"net/http"
 	"net/url"

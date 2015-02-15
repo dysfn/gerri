@@ -6,8 +6,8 @@ usage: !ask this or that or neither
 */
 
 import (
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"math/rand"
 	"strings"
 	"time"

@@ -6,8 +6,8 @@ usage: !beertime
 
 import (
 	"fmt"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"math"
 	"strings"
 	"time"

@@ -6,8 +6,8 @@ usage: !title http://example.com
 
 import (
 	"github.com/PuerkitoBio/goquery"
-	"github.com/microamp/gerri/cmd"
-	"github.com/microamp/gerri/data"
+	"github.com/dysfn/gerri/cmd"
+	"github.com/dysfn/gerri/data"
 	"strings"
 )
 
