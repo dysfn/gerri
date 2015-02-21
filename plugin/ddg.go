@@ -24,7 +24,7 @@ func ReplyDdg(pm data.Privmsg, config *data.Config) (string, error) {
 
 		doc, err := goquery.NewDocument(source)
 		if err != nil {
-			return "", nil
+			return "", err
 		}
 
 		result := doc.Find("div.results_links").Not("div.web-result-sponsored") // excluded sponsored result

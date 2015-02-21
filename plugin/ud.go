@@ -37,7 +37,7 @@ func ReplyUd(pm data.Privmsg, config *data.Config) (string, error) {
 
 		doc, err := goquery.NewDocument(source)
 		if err != nil {
-			return "", nil
+			return "", err
 		}
 
 		result := formatResult(doc.Find("div.meaning").First().Text(), source, config.UdMaxWords)
